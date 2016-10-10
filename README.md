@@ -36,7 +36,26 @@ main = do
     let myfile = "IPV6-COUNTRY-REGION-CITY-LATITUDE-LONGITUDE-ZIPCODE-TIMEZONE-ISP-DOMAIN-NETSPEED-AREACODE-WEATHER-MOBILE-ELEVATION-USAGETYPE.BIN"
     meta <- doInit myfile
     result <- doQuery myfile meta "8.8.8.8"
-    putStrLn (show result)
+    putStrLn $ "country_short: " ++ (show (country_short result))
+    putStrLn $ "country_long: " ++ (show (country_long result))
+    putStrLn $ "region: " ++ (show (region result))
+    putStrLn $ "city: " ++ (show (city result))
+    putStrLn $ "isp: " ++ (show (isp result))
+    putStrLn $ "latitude: " ++ (show (latitude result))
+    putStrLn $ "longitude: " ++ (show (longitude result))
+    putStrLn $ "domain: " ++ (show (domain result))
+    putStrLn $ "zipcode: " ++ (show (zipcode result))
+    putStrLn $ "timezone: " ++ (show (timezone result))
+    putStrLn $ "netspeed: " ++ (show (netspeed result))
+    putStrLn $ "iddcode: " ++ (show (iddcode result))
+    putStrLn $ "areacode: " ++ (show (areacode result))
+    putStrLn $ "weatherstationcode: " ++ (show (weatherstationcode result))
+    putStrLn $ "weatherstationname: " ++ (show (weatherstationname result))
+    putStrLn $ "mcc: " ++ (show (mcc result))
+    putStrLn $ "mnc: " ++ (show (mnc result))
+    putStrLn $ "mobilebrand: " ++ (show (mobilebrand result))
+    putStrLn $ "elevation: " ++ (show (elevation result))
+    putStrLn $ "usagetype: " ++ (show (usagetype result))
 ```
 
 Dependencies

@@ -26,12 +26,12 @@ catchIO :: IO a -> (Exception.IOException -> IO a) -> IO a
 catchIO = Exception.catch
 
 version :: Version
-version = Version [8,0,3] []
+version = Version [8,0,4] []
 bindir, libdir, datadir, libexecdir, sysconfdir :: FilePath
 
 bindir     = "/root/.cabal/bin"
-libdir     = "/root/.cabal/lib/x86_64-linux-ghc-8.0.1/ip2location-8.0.3-2Ud2j86PgFl8KCW91BcER5"
-datadir    = "/root/.cabal/share/x86_64-linux-ghc-8.0.1/ip2location-8.0.3"
+libdir     = "/root/.cabal/lib/x86_64-linux-ghc-8.0.1/ip2location-8.0.4-EJEn3Sdeyj18D0gbXKZdU8"
+datadir    = "/root/.cabal/share/x86_64-linux-ghc-8.0.1/ip2location-8.0.4"
 libexecdir = "/root/.cabal/libexec"
 sysconfdir = "/root/.cabal/etc"
 

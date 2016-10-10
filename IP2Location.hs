@@ -14,7 +14,7 @@ mobile brand, elevation, and usage type as values. It supports both IP addresses
 
 IP2Location LITE BIN databases are available for free at http://lite.ip2location.com/
 -}
-module IP2Location (Meta, IP2LocationRecord, getAPIVersion, doInit, doQuery) where
+module IP2Location (Meta, IP2LocationRecord(..), getAPIVersion, doInit, doQuery) where
 
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.Char8 as BS8
@@ -119,7 +119,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.0.3"
+getAPIVersion = "8.0.4"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
