@@ -1,8 +1,8 @@
 {-|
 Module      : IP2Location
 Description : IP2Location Haskell package
-Copyright   : (c) IP2Location, 2016
-License     : LGPL-3
+Copyright   : (c) IP2Location, 2019
+License     : MIT
 Maintainer  : sales@ip2location.com
 Stability   : experimental
 
@@ -119,7 +119,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.0.4"
+getAPIVersion = "8.1.0"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
@@ -324,21 +324,32 @@ tryfirst myIP = do
 doQuery :: String -> Meta -> String -> IO IP2LocationRecord
 doQuery myfile meta myip = do
     contents <- BS.readFile myfile
-    let from = 281470681743360
-    let to = 281474976710655
-    let fromA = 0
-    let toA = 4294967295
+    let fromV4Mapped = 281470681743360
+    let toV4Mapped = 281474976710655
+    let fromV4Compatible = 0
+    let toV4Compatible = 4294967295
+    let from6To4 = 42545680458834377588178886921629466624
+    let to6To4 = 42550872755692912415807417417958686719
+    let fromTeredo = 42540488161975842760550356425300246528
+    let toTeredo = 42540488241204005274814694018844196863
+    let last32Bits = 4294967295
     
     ipnum <- tryfirst myip
     if ipnum == -1
         then do
             let x = "Invalid IP address."
             return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x
-        else if ipnum >= from && ipnum <= to
+        else if ipnum >= fromV4Mapped && ipnum <= toV4Mapped
             then do
-                return $ search4 contents (ipnum - (toInteger from)) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
-            else if ipnum >= fromA && ipnum <= toA
+                return $ search4 contents (ipnum - (toInteger fromV4Mapped)) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+            else if ipnum >= from6To4 && ipnum <= to6To4
                 then do
-                    return $ search4 contents ipnum (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
-                else do
-                    return $ search6 contents ipnum (databasetype meta) 0 (ipv6databasecount meta) (ipv6databaseaddr meta) (ipv6indexbaseaddr meta) (ipv6columnsize meta)
+                    return $ search4 contents ((ipnum `rotateR` 80) .&. last32Bits) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+                else if ipnum >= fromTeredo && ipnum <= toTeredo
+                    then do
+                        return $ search4 contents ((complement ipnum) .&. last32Bits) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+                    else if ipnum >= fromV4Compatible && ipnum <= toV4Compatible
+                        then do
+                            return $ search4 contents ipnum (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+                        else do
+                            return $ search6 contents ipnum (databasetype meta) 0 (ipv6databasecount meta) (ipv6databaseaddr meta) (ipv6indexbaseaddr meta) (ipv6columnsize meta)

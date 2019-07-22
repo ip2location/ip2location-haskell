@@ -10,7 +10,7 @@ name:                ip2location
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             8.0.4
+version:             8.1.0
 
 -- A short (one-line) description of the package.
 synopsis:            IP2Location Haskell package for IP geolocation.
@@ -22,7 +22,7 @@ synopsis:            IP2Location Haskell package for IP geolocation.
 homepage:            http://www.ip2location.com
 
 -- The license under which the package is released.
-license:             LGPL-3
+license:             MIT
 
 -- The file containing the license text.
 license-file:        LICENSE
