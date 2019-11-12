@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.2.0  -- 2019-11-12
+
+* Standardized the reading algorithm to follow other components.
+
 ## 8.1.0  -- 2019-07-22
 
 * Added support for 6to4 and Teredo.

@@ -119,7 +119,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.1.0"
+getAPIVersion = "8.2.0"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
@@ -146,6 +146,9 @@ readuint8 contents startpos = fromIntegral (runGet getWord8 (BS.drop (fromIntegr
 readuint32 :: BS.ByteString -> Int -> Int
 readuint32 contents startpos = fromIntegral (runGet getWord32le (BS.drop (fromIntegral startpos - 1) contents))
 
+readuint32row :: BS.ByteString -> Int -> Int
+readuint32row row startpos = fromIntegral (runGet getWord32le (BS.drop (fromIntegral startpos) row))
+
 getuint128 = do
     uint64A <- getWord64le
     uint64B <- getWord64le
@@ -157,6 +160,9 @@ readuint128 contents startpos = runGet getuint128 (BS.drop (fromIntegral startpo
 
 readfloat :: BS.ByteString -> Int -> Float
 readfloat contents startpos = runGet getFloatle (BS.drop (fromIntegral startpos - 1) contents)
+
+readfloatrow :: BS.ByteString -> Int -> Float
+readfloatrow row startpos = runGet getFloatle (BS.drop (fromIntegral startpos) row)
 
 readstr :: BS.ByteString -> Int -> String
 readstr contents startpos = do
@@ -179,6 +185,21 @@ readcolcountry contents dbtype rowoffset col = do
             let x2 = readstr contents (x0 + 3)
             (x1, x2)
 
+readcolcountryrow :: BS.ByteString -> BS.ByteString -> Int -> [Int] -> (String, String)
+readcolcountryrow contents row dbtype col = do
+    let x = "This parameter is unavailable for selected data file. Please upgrade the data file."
+    let [colpos] = take 1 (drop dbtype col)
+    
+    if colpos == 0
+        then do
+            (x, x)
+        else do
+            let coloffset = (colpos - 2) `shiftL` 2
+            let x0 = readuint32row row coloffset
+            let x1 = readstr contents  x0
+            let x2 = readstr contents (x0 + 3)
+            (x1, x2)
+
 readcolstring :: BS.ByteString -> Int -> Int -> [Int] -> String
 readcolstring contents dbtype rowoffset col = do
     let [colpos] = take 1 (drop dbtype col)
@@ -189,6 +210,17 @@ readcolstring contents dbtype rowoffset col = do
         else do
             let coloffset = (colpos - 1) `shiftL` 2
             readstr contents (readuint32 contents (rowoffset + coloffset))
+
+readcolstringrow :: BS.ByteString -> BS.ByteString -> Int -> [Int] -> String
+readcolstringrow contents row dbtype col = do
+    let [colpos] = take 1 (drop dbtype col)
+    
+    if colpos == 0
+        then do
+            "This parameter is unavailable for selected data file. Please upgrade the data file."
+        else do
+            let coloffset = (colpos - 2) `shiftL` 2
+            readstr contents (readuint32row row coloffset)
 
 readcolfloat :: BS.ByteString -> Int -> Int -> [Int] -> Float
 readcolfloat contents dbtype rowoffset col = do
@@ -201,6 +233,17 @@ readcolfloat contents dbtype rowoffset col = do
             let coloffset = (colpos - 1) `shiftL` 2
             readfloat contents (rowoffset + coloffset)
 
+readcolfloatrow :: BS.ByteString -> Int -> [Int] -> Float
+readcolfloatrow row dbtype col = do
+    let [colpos] = take 1 (drop dbtype col)
+    
+    if colpos == 0
+        then do
+            0.0
+        else do
+            let coloffset = (colpos - 2) `shiftL` 2
+            readfloatrow row coloffset
+
 readcolfloatstring :: BS.ByteString -> Int -> Int -> [Int] -> Float
 readcolfloatstring contents dbtype rowoffset col = do
     let [colpos] = take 1 (drop dbtype col)
@@ -212,6 +255,21 @@ readcolfloatstring contents dbtype rowoffset col = do
             let coloffset = (colpos - 1) `shiftL` 2
             let n = readstr contents (readuint32 contents (rowoffset + coloffset))
             read n :: Float
+
+readcolfloatstringrow :: BS.ByteString -> BS.ByteString -> Int -> [Int] -> Float
+readcolfloatstringrow contents row dbtype col = do
+    let [colpos] = take 1 (drop dbtype col)
+    
+    if colpos == 0
+        then do
+            0.0
+        else do
+            let coloffset = (colpos - 2) `shiftL` 2
+            let n = readstr contents (readuint32row row coloffset)
+            read n :: Float
+
+countif :: (a -> Bool) -> [a] -> Int
+countif f = length . filter f 
 
 readrecord :: BS.ByteString -> Int -> Int -> IP2LocationRecord
 readrecord contents dbtype rowoffset = do
@@ -235,25 +293,49 @@ readrecord contents dbtype rowoffset = do
     let elevation_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 19, 0, 19]
     let usagetype_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 20]
     
-    let (country_short, country_long) = readcolcountry contents dbtype rowoffset country_position
-    let region = readcolstring contents dbtype rowoffset region_position
-    let city = readcolstring contents dbtype rowoffset city_position
-    let isp = readcolstring contents dbtype rowoffset isp_position
-    let latitude = readcolfloat contents dbtype rowoffset latitude_position
-    let longitude = readcolfloat contents dbtype rowoffset longitude_position
-    let domain = readcolstring contents dbtype rowoffset domain_position
-    let zipcode = readcolstring contents dbtype rowoffset zipcode_position
-    let timezone = readcolstring contents dbtype rowoffset timezone_position
-    let netspeed = readcolstring contents dbtype rowoffset netspeed_position
-    let iddcode = readcolstring contents dbtype rowoffset iddcode_position
-    let areacode = readcolstring contents dbtype rowoffset areacode_position
-    let weatherstationcode = readcolstring contents dbtype rowoffset weatherstationcode_position
-    let weatherstationname = readcolstring contents dbtype rowoffset weatherstationname_position
-    let mcc = readcolstring contents dbtype rowoffset mcc_position
-    let mnc = readcolstring contents dbtype rowoffset mnc_position
-    let mobilebrand = readcolstring contents dbtype rowoffset mobilebrand_position
-    let elevation = readcolfloatstring contents dbtype rowoffset elevation_position
-    let usagetype = readcolstring contents dbtype rowoffset usagetype_position
+    let allcols = (take 1 (drop dbtype country_position)) ++ (take 1 (drop dbtype region_position)) ++ (take 1 (drop dbtype city_position)) ++ (take 1 (drop dbtype isp_position)) ++ (take 1 (drop dbtype latitude_position)) ++ (take 1 (drop dbtype longitude_position)) ++ (take 1 (drop dbtype domain_position)) ++ (take 1 (drop dbtype zipcode_position)) ++ (take 1 (drop dbtype timezone_position)) ++ (take 1 (drop dbtype netspeed_position)) ++ (take 1 (drop dbtype iddcode_position)) ++ (take 1 (drop dbtype areacode_position)) ++ (take 1 (drop dbtype weatherstationcode_position)) ++ (take 1 (drop dbtype weatherstationname_position)) ++ (take 1 (drop dbtype mcc_position)) ++ (take 1 (drop dbtype mnc_position)) ++ (take 1 (drop dbtype mobilebrand_position)) ++ (take 1 (drop dbtype elevation_position)) ++ (take 1 (drop dbtype usagetype_position))
+    let cols = (countif (>0) allcols) `shiftL` 2
+    let row = BS.take (fromIntegral cols) (BS.drop (fromIntegral rowoffset - 1) contents)
+    
+    -- let (country_short, country_long) = readcolcountry contents dbtype rowoffset country_position
+    -- let region = readcolstring contents dbtype rowoffset region_position
+    -- let city = readcolstring contents dbtype rowoffset city_position
+    -- let isp = readcolstring contents dbtype rowoffset isp_position
+    -- let latitude = readcolfloat contents dbtype rowoffset latitude_position
+    -- let longitude = readcolfloat contents dbtype rowoffset longitude_position
+    -- let domain = readcolstring contents dbtype rowoffset domain_position
+    -- let zipcode = readcolstring contents dbtype rowoffset zipcode_position
+    -- let timezone = readcolstring contents dbtype rowoffset timezone_position
+    -- let netspeed = readcolstring contents dbtype rowoffset netspeed_position
+    -- let iddcode = readcolstring contents dbtype rowoffset iddcode_position
+    -- let areacode = readcolstring contents dbtype rowoffset areacode_position
+    -- let weatherstationcode = readcolstring contents dbtype rowoffset weatherstationcode_position
+    -- let weatherstationname = readcolstring contents dbtype rowoffset weatherstationname_position
+    -- let mcc = readcolstring contents dbtype rowoffset mcc_position
+    -- let mnc = readcolstring contents dbtype rowoffset mnc_position
+    -- let mobilebrand = readcolstring contents dbtype rowoffset mobilebrand_position
+    -- let elevation = readcolfloatstring contents dbtype rowoffset elevation_position
+    -- let usagetype = readcolstring contents dbtype rowoffset usagetype_position
+    
+    let (country_short, country_long) = readcolcountryrow contents row dbtype country_position
+    let region = readcolstringrow contents row dbtype region_position
+    let city = readcolstringrow contents row dbtype city_position
+    let isp = readcolstringrow contents row dbtype isp_position
+    let latitude = readcolfloatrow row dbtype latitude_position
+    let longitude = readcolfloatrow row dbtype longitude_position
+    let domain = readcolstringrow contents row dbtype domain_position
+    let zipcode = readcolstringrow contents row dbtype zipcode_position
+    let timezone = readcolstringrow contents row dbtype timezone_position
+    let netspeed = readcolstringrow contents row dbtype netspeed_position
+    let iddcode = readcolstringrow contents row dbtype iddcode_position
+    let areacode = readcolstringrow contents row dbtype areacode_position
+    let weatherstationcode = readcolstringrow contents row dbtype weatherstationcode_position
+    let weatherstationname = readcolstringrow contents row dbtype weatherstationname_position
+    let mcc = readcolstringrow contents row dbtype mcc_position
+    let mnc = readcolstringrow contents row dbtype mnc_position
+    let mobilebrand = readcolstringrow contents row dbtype mobilebrand_position
+    let elevation = readcolfloatstringrow contents row dbtype elevation_position
+    let usagetype = readcolstringrow contents row dbtype usagetype_position
     
     IP2LocationRecord country_short country_long region city isp latitude longitude domain zipcode timezone netspeed iddcode areacode weatherstationcode weatherstationname mcc mnc mobilebrand elevation usagetype 
 
@@ -277,9 +359,11 @@ searchtree contents ipnum dbtype low high baseaddr colsize iptype = do
                 then do
                     if iptype == 4
                         then
-                            readrecord contents dbtype rowoffset
+                            -- readrecord contents dbtype rowoffset
+                            readrecord contents dbtype (rowoffset + 4)
                         else
-                            readrecord contents dbtype (rowoffset + 12)
+                            -- readrecord contents dbtype (rowoffset + 12)
+                            readrecord contents dbtype (rowoffset + 16)
                 else if ipnum < ipfrom
                     then
                         searchtree contents ipnum dbtype low (mid - 1) baseaddr colsize iptype
