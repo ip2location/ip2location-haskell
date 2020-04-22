@@ -10,7 +10,7 @@ name:                ip2location
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             8.2.0
+version:             8.2.1
 
 -- A short (one-line) description of the package.
 synopsis:            IP2Location Haskell package for IP geolocation.
@@ -60,7 +60,7 @@ library
   -- other-extensions:    
   
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.9 && <4.10, bytestring >=0.10 && <0.11, binary >=0.8.4 && <0.9, iproute >=1.7 && <1.8
+  build-depends:       base >=4.9 && <=4.14, bytestring >=0.10 && <0.11, binary >=0.8.4 && <0.9, iproute >=1.7 && <1.8
   
   -- Directories containing source files.
   -- hs-source-dirs:      

@@ -1,7 +1,7 @@
 {-|
 Module      : IP2Location
 Description : IP2Location Haskell package
-Copyright   : (c) IP2Location, 2019
+Copyright   : (c) IP2Location, 2020
 License     : MIT
 Maintainer  : sales@ip2location.com
 Stability   : experimental
@@ -119,7 +119,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.2.0"
+getAPIVersion = "8.2.1"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip

@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.2.1  -- 2020-04-22
+
+* Modified version requirement for base module.
+
 ## 8.2.0  -- 2019-11-12
 
 * Standardized the reading algorithm to follow other components.
