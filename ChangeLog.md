@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.3.0  -- 2021-06-23
+
+* Added support for address type and IAB category. Added exception handling for wrong BIN file.
+
 ## 8.2.1  -- 2020-04-22
 
 * Modified version requirement for base module.
