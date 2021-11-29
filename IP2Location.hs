@@ -136,7 +136,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.3.1"
+getAPIVersion = "8.4.0"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip

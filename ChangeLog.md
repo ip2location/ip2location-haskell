@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.4.0  -- 2021-11-29
+
+* Added support for IP2Location Web Service.
+
 ## 8.3.1  -- 2021-06-24
 
 * Fixed Hackage build depedencies issue.
