@@ -1,16 +1,17 @@
 {-|
 Module      : IP2Location
 Description : IP2Location Haskell package
-Copyright   : (c) IP2Location, 2021
+Copyright   : (c) IP2Location, 2023
 License     : MIT
 Maintainer  : sales@ip2location.com
 Stability   : experimental
 
 This Haskell package provides a fast lookup of country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code,
-weather station code, weather station name, mcc, mnc, mobile brand, elevation, usage type, address type and IAB category from IP address by using IP2Location database.
-This package uses a file based database available at IP2Location.com. This database simply contains IP blocks as keys, and other information such as country, 
-region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, weather station code, weather station name, mcc, mnc, 
-mobile brand, elevation, usage type, address type and IAB category as values. It supports both IP addresses in IPv4 and IPv6.
+weather station code, weather station name, mcc, mnc, mobile brand, elevation, usage type, address type, IAB category, district, autonomous system number (ASN) and 
+autonomous system (AS) from IP address by using IP2Location database. This package uses a file based database available at IP2Location.com. This database simply contains 
+IP blocks as keys, and other information such as country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, 
+weather station code, weather station name, mcc, mnc, mobile brand, elevation, usage type, address type, IAB category, district, autonomous system number (ASN) and 
+autonomous system (AS) as values. It supports both IP addresses in IPv4 and IPv6.
 
 IP2Location LITE BIN databases are available for free at http://lite.ip2location.com/
 -}
@@ -70,7 +71,13 @@ data IP2LocationRecord = IP2LocationRecord {
     -- | Address type
     addresstype :: String,
     -- | Category
-    category :: String
+    category :: String,
+    -- | District
+    district :: String,
+    -- | ASN
+    asn :: String,
+    -- | AS
+    as :: String
 } deriving (Show)
 
 -- | Contains the BIN database file metadata.
@@ -136,7 +143,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.4.0"
+getAPIVersion = "8.5.0"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
@@ -259,29 +266,32 @@ countif f = length . filter f
 
 readrecord :: BS.ByteString -> Int -> Int -> IP2LocationRecord
 readrecord contents dbtype rowoffset = do
-    let country_position = [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
-    let region_position = [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-    let city_position = [0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
-    let isp_position = [0, 0, 3, 0, 5, 0, 7, 5, 7, 0, 8, 0, 9, 0, 9, 0, 9, 0, 9, 7, 9, 0, 9, 7, 9, 9]
-    let latitude_position = [0, 0, 0, 0, 0, 5, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-    let longitude_position = [0, 0, 0, 0, 0, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
-    let domain_position = [0, 0, 0, 0, 0, 0, 0, 6, 8, 0, 9, 0, 10,0, 10, 0, 10, 0, 10, 8, 10, 0, 10, 8, 10, 10]
-    let zipcode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 0, 7, 7, 7, 0, 7, 0, 7, 7, 7, 0, 7, 7]
-    let timezone_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 7, 8, 8, 8, 7, 8, 0, 8, 8, 8, 0, 8, 8]
-    let netspeed_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 11,0, 11,8, 11, 0, 11, 0, 11, 0, 11, 11]
-    let iddcode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 12, 0, 12, 0, 12, 9, 12, 0, 12, 12]
-    let areacode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10 ,13 ,0, 13, 0, 13, 10, 13, 0, 13, 13]
-    let weatherstationcode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 14, 0, 14, 0, 14, 0, 14, 14]
-    let weatherstationname_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 15, 0, 15, 0, 15, 0, 15, 15]
-    let mcc_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 16, 0, 16, 9, 16, 16]
-    let mnc_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10,17, 0, 17, 10, 17, 17]
-    let mobilebrand_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11,18, 0, 18, 11, 18, 18]
-    let elevation_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 19, 0, 19, 19]
-    let usagetype_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 20, 20]
-    let addresstype_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21]
-    let category_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22]
+    let country_position = [0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+    let region_position = [0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    let city_position = [0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+    let isp_position = [0, 0, 3, 0, 5, 0, 7, 5, 7, 0, 8, 0, 9, 0, 9, 0, 9, 0, 9, 7, 9, 0, 9, 7, 9, 9, 9]
+    let latitude_position = [0, 0, 0, 0, 0, 5, 5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+    let longitude_position = [0, 0, 0, 0, 0, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6]
+    let domain_position = [0, 0, 0, 0, 0, 0, 0, 6, 8, 0, 9, 0, 10,0, 10, 0, 10, 0, 10, 8, 10, 0, 10, 8, 10, 10, 10]
+    let zipcode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 0, 7, 7, 7, 0, 7, 0, 7, 7, 7, 0, 7, 7, 7]
+    let timezone_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 7, 8, 8, 8, 7, 8, 0, 8, 8, 8, 0, 8, 8, 8]
+    let netspeed_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 11,0, 11,8, 11, 0, 11, 0, 11, 0, 11, 11, 11]
+    let iddcode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 12, 0, 12, 0, 12, 9, 12, 0, 12, 12, 12]
+    let areacode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10 ,13 ,0, 13, 0, 13, 10, 13, 0, 13, 13, 13]
+    let weatherstationcode_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 14, 0, 14, 0, 14, 0, 14, 14, 14]
+    let weatherstationname_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 15, 0, 15, 0, 15, 0, 15, 15, 15]
+    let mcc_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 16, 0, 16, 9, 16, 16, 16]
+    let mnc_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10,17, 0, 17, 10, 17, 17, 17]
+    let mobilebrand_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11,18, 0, 18, 11, 18, 18, 18]
+    let elevation_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 19, 0, 19, 19, 19]
+    let usagetype_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 20, 20, 20]
+    let addresstype_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 21, 21]
+    let category_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 22, 22]
+    let district_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23]
+    let asn_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24]
+    let as_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25]
     
-    let allcols = (take 1 (drop dbtype country_position)) ++ (take 1 (drop dbtype region_position)) ++ (take 1 (drop dbtype city_position)) ++ (take 1 (drop dbtype isp_position)) ++ (take 1 (drop dbtype latitude_position)) ++ (take 1 (drop dbtype longitude_position)) ++ (take 1 (drop dbtype domain_position)) ++ (take 1 (drop dbtype zipcode_position)) ++ (take 1 (drop dbtype timezone_position)) ++ (take 1 (drop dbtype netspeed_position)) ++ (take 1 (drop dbtype iddcode_position)) ++ (take 1 (drop dbtype areacode_position)) ++ (take 1 (drop dbtype weatherstationcode_position)) ++ (take 1 (drop dbtype weatherstationname_position)) ++ (take 1 (drop dbtype mcc_position)) ++ (take 1 (drop dbtype mnc_position)) ++ (take 1 (drop dbtype mobilebrand_position)) ++ (take 1 (drop dbtype elevation_position)) ++ (take 1 (drop dbtype usagetype_position)) ++ (take 1 (drop dbtype addresstype_position)) ++ (take 1 (drop dbtype category_position))
+    let allcols = (take 1 (drop dbtype country_position)) ++ (take 1 (drop dbtype region_position)) ++ (take 1 (drop dbtype city_position)) ++ (take 1 (drop dbtype isp_position)) ++ (take 1 (drop dbtype latitude_position)) ++ (take 1 (drop dbtype longitude_position)) ++ (take 1 (drop dbtype domain_position)) ++ (take 1 (drop dbtype zipcode_position)) ++ (take 1 (drop dbtype timezone_position)) ++ (take 1 (drop dbtype netspeed_position)) ++ (take 1 (drop dbtype iddcode_position)) ++ (take 1 (drop dbtype areacode_position)) ++ (take 1 (drop dbtype weatherstationcode_position)) ++ (take 1 (drop dbtype weatherstationname_position)) ++ (take 1 (drop dbtype mcc_position)) ++ (take 1 (drop dbtype mnc_position)) ++ (take 1 (drop dbtype mobilebrand_position)) ++ (take 1 (drop dbtype elevation_position)) ++ (take 1 (drop dbtype usagetype_position)) ++ (take 1 (drop dbtype addresstype_position)) ++ (take 1 (drop dbtype category_position)) ++ (take 1 (drop dbtype district_position)) ++ (take 1 (drop dbtype asn_position)) ++ (take 1 (drop dbtype as_position))
     let cols = (countif (>0) allcols) `shiftL` 2
     let row = BS.take (fromIntegral cols) (BS.drop (fromIntegral rowoffset - 1) contents)
     
@@ -306,8 +316,11 @@ readrecord contents dbtype rowoffset = do
     let usagetype = readcolstringrow contents row dbtype usagetype_position
     let addresstype = readcolstringrow contents row dbtype addresstype_position
     let category = readcolstringrow contents row dbtype category_position
+    let district = readcolstringrow contents row dbtype district_position
+    let asn = readcolstringrow contents row dbtype asn_position
+    let as = readcolstringrow contents row dbtype as_position
     
-    IP2LocationRecord country_short country_long region city isp latitude longitude domain zipcode timezone netspeed iddcode areacode weatherstationcode weatherstationname mcc mnc mobilebrand elevation usagetype addresstype category 
+    IP2LocationRecord country_short country_long region city isp latitude longitude domain zipcode timezone netspeed iddcode areacode weatherstationcode weatherstationname mcc mnc mobilebrand elevation usagetype addresstype category district asn as 
 
 searchtree :: BS.ByteString -> Integer -> Int -> Int -> Int -> Int -> Int -> Int -> IP2LocationRecord
 searchtree contents ipnum dbtype low high baseaddr colsize iptype = do
@@ -339,7 +352,7 @@ searchtree contents ipnum dbtype low high baseaddr colsize iptype = do
                         searchtree contents ipnum dbtype (mid + 1) high baseaddr colsize iptype
         else do
             let x = "IP address not found."
-            IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x 
+            IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x 
         
 search4 :: BS.ByteString -> Integer -> Int -> Int -> Int -> Int -> Int -> Int -> IP2LocationRecord
 search4 contents ipnum dbtype low high baseaddr indexbaseaddr colsize = do
@@ -390,7 +403,7 @@ doQuery myfile meta myip = do
     if ipnum == -1
         then do
             let x = "Invalid IP address."
-            return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x
+            return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x
         else if ipnum >= fromV4Mapped && ipnum <= toV4Mapped
             then do
                 return $ search4 contents (ipnum - (toInteger fromV4Mapped)) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)

@@ -1,6 +1,6 @@
 # IP2Location Haskell Package
 
-This Haskell package provides a fast lookup of country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, weather station code, station name, mcc, mnc, mobile brand, elevation, usage type, address type and IAB category from IP address by using IP2Location database. This package uses a file based database available at IP2Location.com. This database simply contains IP blocks as keys, and other information such as country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, weather station code, station name, mcc, mnc, mobile brand, elevation, usage type, address type and IAB category as values. It supports both IP address in IPv4 and IPv6.
+This Haskell package provides a fast lookup of country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, weather station code, station name, mcc, mnc, mobile brand, elevation, usage type, address type and IAB category from IP address by using IP2Location database. This package uses a file based database available at IP2Location.com. This database simply contains IP blocks as keys, and other information such as country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, weather station code, station name, mcc, mnc, mobile brand, elevation, usage type, address type, IAB category, district, autonomous system number (ASN) and autonomous system (AS) as values. It supports both IP address in IPv4 and IPv6.
 
 This package can be used in many types of projects such as:
 
@@ -58,7 +58,7 @@ import IP2Location
 
 main :: IO ()
 main = do
-    let myfile = "IPV6-COUNTRY-REGION-CITY-LATITUDE-LONGITUDE-ZIPCODE-TIMEZONE-ISP-DOMAIN-NETSPEED-AREACODE-WEATHER-MOBILE-ELEVATION-USAGETYPE-ADDRESSTYPE-CATEGORY.BIN"
+    let myfile = "IPV6-COUNTRY-REGION-CITY-LATITUDE-LONGITUDE-ZIPCODE-TIMEZONE-ISP-DOMAIN-NETSPEED-AREACODE-WEATHER-MOBILE-ELEVATION-USAGETYPE-ADDRESSTYPE-CATEGORY-DISTRICT-ASN.BIN"
     meta <- doInit myfile
     result <- doQuery myfile meta "8.8.8.8"
     putStrLn $ "country_short: " ++ (show (country_short result))
@@ -83,6 +83,9 @@ main = do
     putStrLn $ "usagetype: " ++ (show (usagetype result))
     putStrLn $ "addresstype: " ++ (show (addresstype result))
     putStrLn $ "category: " ++ (show (category result))
+    putStrLn $ "district: " ++ (show (district result))
+    putStrLn $ "asn: " ++ (show (asn result))
+    putStrLn $ "as: " ++ (show (as result))
 ```
 
 ## QUERY USING THE IP2LOCATION WEB SERVICE

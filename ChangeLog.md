@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.5.0  -- 2023-04-11
+
+* Added support for district, ASN and AS.
+
 ## 8.4.0  -- 2021-11-29
 
 * Added support for IP2Location Web Service.
