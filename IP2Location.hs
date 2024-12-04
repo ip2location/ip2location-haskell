@@ -143,7 +143,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.5.0"
+getAPIVersion = "8.5.1"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
@@ -356,25 +356,33 @@ searchtree contents ipnum dbtype low high baseaddr colsize iptype = do
         
 search4 :: BS.ByteString -> Integer -> Int -> Int -> Int -> Int -> Int -> Int -> IP2LocationRecord
 search4 contents ipnum dbtype low high baseaddr indexbaseaddr colsize = do
+    let ipnum2 = if (ipnum == 4294967295)
+        then ipnum - 1
+        else ipnum
+    
     if indexbaseaddr > 0
         then do
-            let indexpos = fromIntegral (((ipnum `rotateR` 16) `rotateL` 3) + (toInteger indexbaseaddr))
+            let indexpos = fromIntegral (((ipnum2 `rotateR` 16) `rotateL` 3) + (toInteger indexbaseaddr))
             let low2 = readuint32 contents indexpos
             let high2 = readuint32 contents (indexpos + 4)
-            searchtree contents ipnum dbtype low2 high2 baseaddr colsize 4
+            searchtree contents ipnum2 dbtype low2 high2 baseaddr colsize 4
         else
-            searchtree contents ipnum dbtype low high baseaddr colsize 4
+            searchtree contents ipnum2 dbtype low high baseaddr colsize 4
 
 search6 :: BS.ByteString -> Integer -> Int -> Int -> Int -> Int -> Int -> Int -> IP2LocationRecord
 search6 contents ipnum dbtype low high baseaddr indexbaseaddr colsize = do
+    let ipnum2 = if (ipnum == 340282366920938463463374607431768211455)
+        then ipnum - 1
+        else ipnum
+    
     if indexbaseaddr > 0
         then do
-            let indexpos = fromIntegral (((ipnum `rotateR` 112) `rotateL` 3) + (toInteger indexbaseaddr))
+            let indexpos = fromIntegral (((ipnum2 `rotateR` 112) `rotateL` 3) + (toInteger indexbaseaddr))
             let low2 = readuint32 contents indexpos
             let high2 = readuint32 contents (indexpos + 4)
-            searchtree contents ipnum dbtype low2 high2 baseaddr colsize 6
+            searchtree contents ipnum2 dbtype low2 high2 baseaddr colsize 6
         else
-            searchtree contents ipnum dbtype low high baseaddr colsize 6
+            searchtree contents ipnum2 dbtype low high baseaddr colsize 6
 
 tryfirst myIP = do
     result <- try (evaluate (ipStringToInteger myIP)) :: IO (Either SomeException Integer)
@@ -416,5 +424,9 @@ doQuery myfile meta myip = do
                     else if ipnum >= fromV4Compatible && ipnum <= toV4Compatible
                         then do
                             return $ search4 contents ipnum (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
-                        else do
-                            return $ search6 contents ipnum (databasetype meta) 0 (ipv6databasecount meta) (ipv6databaseaddr meta) (ipv6indexbaseaddr meta) (ipv6columnsize meta)
+                        else if (ipv6databasecount meta) == 0
+                            then do
+                                let x = "IPv6 address missing in IPv4 BIN."
+                                return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x
+                            else do
+                                return $ search6 contents ipnum (databasetype meta) 0 (ipv6databasecount meta) (ipv6databaseaddr meta) (ipv6indexbaseaddr meta) (ipv6columnsize meta)
