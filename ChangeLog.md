@@ -4,7 +4,6 @@
 
 * Fixed boundary cases. Fixed IPv6 address error when using IPv4 BIN.
 
-
 ## 8.5.0  -- 2023-04-11
 
 * Added support for district, ASN and AS.
