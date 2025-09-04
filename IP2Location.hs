@@ -1,7 +1,7 @@
 {-|
 Module      : IP2Location
 Description : IP2Location Haskell package
-Copyright   : (c) IP2Location, 2023 - 2024
+Copyright   : (c) IP2Location, 2023 - 2025
 License     : MIT
 Maintainer  : sales@ip2location.com
 Stability   : experimental
@@ -10,8 +10,8 @@ This Haskell package provides a fast lookup of country, region, city, latitude, 
 weather station code, weather station name, mcc, mnc, mobile brand, elevation, usage type, address type, IAB category, district, autonomous system number (ASN) and 
 autonomous system (AS) from IP address by using IP2Location database. This package uses a file based database available at IP2Location.com. This database simply contains 
 IP blocks as keys, and other information such as country, region, city, latitude, longitude, ZIP code, time zone, ISP, domain name, connection type, IDD code, area code, 
-weather station code, weather station name, mcc, mnc, mobile brand, elevation, usage type, address type, IAB category, district, autonomous system number (ASN) and 
-autonomous system (AS) as values. It supports both IP addresses in IPv4 and IPv6.
+weather station code, weather station name, mcc, mnc, mobile brand, elevation, usage type, address type, IAB category, district, autonomous system number (ASN), 
+autonomous system (AS), AS domain, AS usage type and AS CIDR as values. It supports both IP addresses in IPv4 and IPv6.
 
 IP2Location LITE BIN databases are available for free at http://lite.ip2location.com/
 -}
@@ -77,7 +77,13 @@ data IP2LocationRecord = IP2LocationRecord {
     -- | ASN
     asn :: String,
     -- | AS
-    as :: String
+    as :: String,
+    -- | AS domain
+    asdomain :: String,
+    -- | AS usage type
+    asusagetype :: String,
+    -- | AS CIDR
+    ascidr :: String
 } deriving (Show)
 
 -- | Contains the BIN database file metadata.
@@ -143,7 +149,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.5.1"
+getAPIVersion = "8.6.0"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
@@ -290,8 +296,11 @@ readrecord contents dbtype rowoffset = do
     let district_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 23]
     let asn_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 24]
     let as_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 25]
+    let asdomain_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 26]
+    let asusagetype_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 27]
+    let ascidr_position = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28]
     
-    let allcols = (take 1 (drop dbtype country_position)) ++ (take 1 (drop dbtype region_position)) ++ (take 1 (drop dbtype city_position)) ++ (take 1 (drop dbtype isp_position)) ++ (take 1 (drop dbtype latitude_position)) ++ (take 1 (drop dbtype longitude_position)) ++ (take 1 (drop dbtype domain_position)) ++ (take 1 (drop dbtype zipcode_position)) ++ (take 1 (drop dbtype timezone_position)) ++ (take 1 (drop dbtype netspeed_position)) ++ (take 1 (drop dbtype iddcode_position)) ++ (take 1 (drop dbtype areacode_position)) ++ (take 1 (drop dbtype weatherstationcode_position)) ++ (take 1 (drop dbtype weatherstationname_position)) ++ (take 1 (drop dbtype mcc_position)) ++ (take 1 (drop dbtype mnc_position)) ++ (take 1 (drop dbtype mobilebrand_position)) ++ (take 1 (drop dbtype elevation_position)) ++ (take 1 (drop dbtype usagetype_position)) ++ (take 1 (drop dbtype addresstype_position)) ++ (take 1 (drop dbtype category_position)) ++ (take 1 (drop dbtype district_position)) ++ (take 1 (drop dbtype asn_position)) ++ (take 1 (drop dbtype as_position))
+    let allcols = (take 1 (drop dbtype country_position)) ++ (take 1 (drop dbtype region_position)) ++ (take 1 (drop dbtype city_position)) ++ (take 1 (drop dbtype isp_position)) ++ (take 1 (drop dbtype latitude_position)) ++ (take 1 (drop dbtype longitude_position)) ++ (take 1 (drop dbtype domain_position)) ++ (take 1 (drop dbtype zipcode_position)) ++ (take 1 (drop dbtype timezone_position)) ++ (take 1 (drop dbtype netspeed_position)) ++ (take 1 (drop dbtype iddcode_position)) ++ (take 1 (drop dbtype areacode_position)) ++ (take 1 (drop dbtype weatherstationcode_position)) ++ (take 1 (drop dbtype weatherstationname_position)) ++ (take 1 (drop dbtype mcc_position)) ++ (take 1 (drop dbtype mnc_position)) ++ (take 1 (drop dbtype mobilebrand_position)) ++ (take 1 (drop dbtype elevation_position)) ++ (take 1 (drop dbtype usagetype_position)) ++ (take 1 (drop dbtype addresstype_position)) ++ (take 1 (drop dbtype category_position)) ++ (take 1 (drop dbtype district_position)) ++ (take 1 (drop dbtype asn_position)) ++ (take 1 (drop dbtype as_position)) ++ (take 1 (drop dbtype asdomain_position)) ++ (take 1 (drop dbtype asusagetype_position)) ++ (take 1 (drop dbtype ascidr_position))
     let cols = (countif (>0) allcols) `shiftL` 2
     let row = BS.take (fromIntegral cols) (BS.drop (fromIntegral rowoffset - 1) contents)
     
@@ -319,8 +328,11 @@ readrecord contents dbtype rowoffset = do
     let district = readcolstringrow contents row dbtype district_position
     let asn = readcolstringrow contents row dbtype asn_position
     let as = readcolstringrow contents row dbtype as_position
+    let asdomain = readcolstringrow contents row dbtype asdomain_position
+    let asusagetype = readcolstringrow contents row dbtype asusagetype_position
+    let ascidr = readcolstringrow contents row dbtype ascidr_position
     
-    IP2LocationRecord country_short country_long region city isp latitude longitude domain zipcode timezone netspeed iddcode areacode weatherstationcode weatherstationname mcc mnc mobilebrand elevation usagetype addresstype category district asn as 
+    IP2LocationRecord country_short country_long region city isp latitude longitude domain zipcode timezone netspeed iddcode areacode weatherstationcode weatherstationname mcc mnc mobilebrand elevation usagetype addresstype category district asn as asdomain asusagetype ascidr 
 
 searchtree :: BS.ByteString -> Integer -> Int -> Int -> Int -> Int -> Int -> Int -> IP2LocationRecord
 searchtree contents ipnum dbtype low high baseaddr colsize iptype = do
@@ -352,7 +364,7 @@ searchtree contents ipnum dbtype low high baseaddr colsize iptype = do
                         searchtree contents ipnum dbtype (mid + 1) high baseaddr colsize iptype
         else do
             let x = "IP address not found."
-            IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x 
+            IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x x x x 
         
 search4 :: BS.ByteString -> Integer -> Int -> Int -> Int -> Int -> Int -> Int -> IP2LocationRecord
 search4 contents ipnum dbtype low high baseaddr indexbaseaddr colsize = do
@@ -411,7 +423,7 @@ doQuery myfile meta myip = do
     if ipnum == -1
         then do
             let x = "Invalid IP address."
-            return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x
+            return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x x x x
         else if ipnum >= fromV4Mapped && ipnum <= toV4Mapped
             then do
                 return $ search4 contents (ipnum - (toInteger fromV4Mapped)) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
@@ -427,6 +439,6 @@ doQuery myfile meta myip = do
                         else if (ipv6databasecount meta) == 0
                             then do
                                 let x = "IPv6 address missing in IPv4 BIN."
-                                return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x
+                                return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x x x x
                             else do
                                 return $ search6 contents ipnum (databasetype meta) 0 (ipv6databasecount meta) (ipv6databaseaddr meta) (ipv6indexbaseaddr meta) (ipv6columnsize meta)

@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.6.0  -- 2025-09-04
+
+* Added support for AS domain, AS usage type and AS CIDR.
+
 ## 8.5.1  -- 2024-12-04
 
 * Fixed boundary cases. Fixed IPv6 address error when using IPv4 BIN.

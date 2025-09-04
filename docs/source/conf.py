@@ -6,11 +6,11 @@
 # -- Project information
 
 project = 'IP2Location Haskell'
-copyright = '2023, IP2Location'
+copyright = '2025, IP2Location'
 author = 'IP2Location'
 
-release = '1.0.0'
-version = '1.0.0'
+release = '8.6.0'
+version = '8.6.0'
 
 # -- General configuration
 
@@ -61,4 +61,4 @@ html_favicon = 'images/favicon.ico'
 
 html_title = "IP2Location Haskell"
 
-# html_baseurl = "https://ip2location-go.readthedocs.io/en/latest/"
+# html_baseurl = "https://ip2location-haskell.readthedocs.io/en/latest/"

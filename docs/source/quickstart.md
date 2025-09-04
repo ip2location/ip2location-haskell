@@ -61,4 +61,7 @@ main = do
     putStrLn $ "district: " ++ (show (district result))
     putStrLn $ "asn: " ++ (show (asn result))
     putStrLn $ "as: " ++ (show (as result))
+    putStrLn $ "asdomain: " ++ (show (asdomain result))
+    putStrLn $ "asusagetype: " ++ (show (asusagetype result))
+    putStrLn $ "ascidr: " ++ (show (ascidr result))
 ```
