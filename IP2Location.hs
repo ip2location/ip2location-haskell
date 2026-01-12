@@ -1,7 +1,7 @@
 {-|
 Module      : IP2Location
 Description : IP2Location Haskell package
-Copyright   : (c) IP2Location, 2023 - 2025
+Copyright   : (c) IP2Location, 2023 - 2026
 License     : MIT
 Maintainer  : sales@ip2location.com
 Stability   : experimental
@@ -15,7 +15,7 @@ autonomous system (AS), AS domain, AS usage type and AS CIDR as values. It suppo
 
 IP2Location LITE BIN databases are available for free at http://lite.ip2location.com/
 -}
-module IP2Location (Meta, IP2LocationRecord(..), getAPIVersion, doInit, doQuery) where
+module IP2Location (Meta, IP2LocationRecord(..), getAPIVersion, doInit, doInitBS, doQuery, doQueryBS) where
 
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.Char8 as BS8
@@ -149,7 +149,7 @@ getMeta = do
     The 'getAPIVersion' function returns a string containing the API version.
 -}
 getAPIVersion :: String
-getAPIVersion = "8.6.0"
+getAPIVersion = "8.7.0"
 
 ipToOcts :: IP -> [Int]
 ipToOcts (IPv4 ip) = fromIPv4 ip
@@ -168,6 +168,20 @@ ipStringToInteger = ipToInteger . read
 doInit :: String -> IO Meta
 doInit myfile = do
     contents <- BS.readFile myfile
+    let stuff = runGet getMeta contents
+    let iswrong = (show (wrongbin stuff))
+    if iswrong == "1"
+        then do
+            die(show "Incorrect IP2Location BIN file format. Please make sure that you are using the latest IP2Location BIN file.")
+        else do
+            return $ stuff
+
+{-|
+    The 'doInitBS' function returns the Meta record containing metadata from the content.
+    It takes one argument, of type 'BS.ByteString', which is the content of the BIN database file.
+-}
+doInitBS :: BS.ByteString -> IO Meta
+doInitBS contents = do
     let stuff = runGet getMeta contents
     let iswrong = (show (wrongbin stuff))
     if iswrong == "1"
@@ -409,6 +423,47 @@ tryfirst myIP = do
 doQuery :: String -> Meta -> String -> IO IP2LocationRecord
 doQuery myfile meta myip = do
     contents <- BS.readFile myfile
+    let fromV4Mapped = 281470681743360
+    let toV4Mapped = 281474976710655
+    let fromV4Compatible = 0
+    let toV4Compatible = 4294967295
+    let from6To4 = 42545680458834377588178886921629466624
+    let to6To4 = 42550872755692912415807417417958686719
+    let fromTeredo = 42540488161975842760550356425300246528
+    let toTeredo = 42540488241204005274814694018844196863
+    let last32Bits = 4294967295
+    
+    ipnum <- tryfirst myip
+    if ipnum == -1
+        then do
+            let x = "Invalid IP address."
+            return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x x x x
+        else if ipnum >= fromV4Mapped && ipnum <= toV4Mapped
+            then do
+                return $ search4 contents (ipnum - (toInteger fromV4Mapped)) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+            else if ipnum >= from6To4 && ipnum <= to6To4
+                then do
+                    return $ search4 contents ((ipnum `rotateR` 80) .&. last32Bits) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+                else if ipnum >= fromTeredo && ipnum <= toTeredo
+                    then do
+                        return $ search4 contents ((complement ipnum) .&. last32Bits) (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+                    else if ipnum >= fromV4Compatible && ipnum <= toV4Compatible
+                        then do
+                            return $ search4 contents ipnum (databasetype meta) 0 (ipv4databasecount meta) (ipv4databaseaddr meta) (ipv4indexbaseaddr meta) (ipv4columnsize meta)
+                        else if (ipv6databasecount meta) == 0
+                            then do
+                                let x = "IPv6 address missing in IPv4 BIN."
+                                return $ IP2LocationRecord x x x x x 0.0 0.0 x x x x x x x x x x x 0.0 x x x x x x x x x
+                            else do
+                                return $ search6 contents ipnum (databasetype meta) 0 (ipv6databasecount meta) (ipv6databaseaddr meta) (ipv6indexbaseaddr meta) (ipv6columnsize meta)
+
+
+{-|
+    The 'doQueryBS' function returns an IP2LocationRecord containing geolocation data for an IP address.
+    It takes 3 arguments; the content of the BIN database file (BS.ByteString), the metadata from 'doInitBS' function (Meta record) & either IPv4 or IPv6 address (String).
+-}
+doQueryBS :: BS.ByteString -> Meta -> String -> IO IP2LocationRecord
+doQueryBS contents meta myip = do
     let fromV4Mapped = 281470681743360
     let toV4Mapped = 281474976710655
     let fromV4Compatible = 0

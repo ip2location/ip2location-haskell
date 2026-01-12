@@ -6,11 +6,11 @@
 # -- Project information
 
 project = 'IP2Location Haskell'
-copyright = '2025, IP2Location'
+copyright = '2026, IP2Location'
 author = 'IP2Location'
 
-release = '8.6.0'
-version = '8.6.0'
+release = '8.7.0'
+version = '8.7.0'
 
 # -- General configuration
 

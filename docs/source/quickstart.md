@@ -30,12 +30,14 @@ You can query the geolocation information from the IP2Location BIN database as b
 
 ```haskell
 import IP2Location
+import qualified Data.ByteString.Lazy as BS
 
 main :: IO ()
 main = do
     let myfile = "IPV6-COUNTRY-REGION-CITY-LATITUDE-LONGITUDE-ZIPCODE-TIMEZONE-ISP-DOMAIN-NETSPEED-AREACODE-WEATHER-MOBILE-ELEVATION-USAGETYPE-ADDRESSTYPE-CATEGORY-DISTRICT-ASN.BIN"
-    meta <- doInit myfile
-    result <- doQuery myfile meta "8.8.8.8"
+    contents <- BS.readFile myfile -- load BIN once
+    meta <- doInitBS contents
+    result <- doQueryBS contents meta "8.8.8.8"
     putStrLn $ "country_short: " ++ (show (country_short result))
     putStrLn $ "country_long: " ++ (show (country_long result))
     putStrLn $ "region: " ++ (show (region result))

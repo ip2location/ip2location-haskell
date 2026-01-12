@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.7.0  -- 2026-01-12
+
+* Added doInitBS and doQueryBS to allow opening of the BIN file once and querying multiple times.
+
 ## 8.6.0  -- 2025-09-04
 
 * Added support for AS domain, AS usage type and AS CIDR.

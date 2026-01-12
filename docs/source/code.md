@@ -2,15 +2,19 @@
 
 ## IP2Location Class
 
-```{py:function} doInit(myfile)
-Load the IP2Location BIN database for lookup.
+```{py:function} doInitBS(contents)
+Load the IP2Location BIN file content for lookup.
 
-:param str myfile: (Required) The file path links to IP2Location BIN databases.
+:param Data.ByteString.Lazy contents: (Required) The IP2Location BIN file content.
+:return: Returns the BIN file meta data in the Record
+:rtype: Record
 ```
 
-```{py:function} doQuery(myip)
+```{py:function} doQueryBS(contents, meta, myip)
 Retrieve geolocation information for an IP address.
 
+:param Data.ByteString.Lazy contents: (Required) The IP2Location BIN file content.
+:param Record meta: (Required) The meta data returned by doInitBS.
 :param str myip: (Required) The IP address (IPv4 or IPv6).
 :return: Returns the geolocation information in Record. Refer below table for the fields avaliable in the Record
 :rtype: Record

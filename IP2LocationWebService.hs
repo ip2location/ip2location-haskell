@@ -2,7 +2,7 @@
 {-|
 Module      : IP2LocationWebService
 Description : IP2Location Haskell package
-Copyright   : (c) IP2Location, 2023 - 2025
+Copyright   : (c) IP2Location, 2023 - 2026
 License     : MIT
 Maintainer  : sales@ip2location.com
 Stability   : experimental

@@ -10,7 +10,7 @@ name:                ip2location
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             8.6.0
+version:             8.7.0
 
 -- A short (one-line) description of the package.
 synopsis:            IP2Location Haskell package for IP geolocation.
