@@ -1,5 +1,9 @@
 # Revision history for ip2location
 
+## 8.7.1  -- 2026-07-23
+
+* Updated dependencies.
+
 ## 8.7.0  -- 2026-01-12
 
 * Added doInitBS and doQueryBS to allow opening of the BIN file once and querying multiple times.
